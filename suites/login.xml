@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!-- Login tests need no stored session. Use: mvn test -DsuiteXmlFile=suites/login.xml -->
+<suite name="login suite" verbose="1">
+    <test name="login">
+        <classes>
+            <class name="com.meera.tests.LoginTests"/>
+        </classes>
+    </test>
+</suite>

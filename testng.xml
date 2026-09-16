@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  Master suite. The <test> blocks below mirror the "projects" in the old
+  playwright.config.ts. TestNG runs them top-to-bottom, so the "setup" test
+  runs first and writes playwright/.auth/auth.json; every authenticated test
+  class then loads that file in BaseTest (see AuthenticatedTest).
+
+  Run everything:      mvn test
+  Run one module:      mvn test -DsuiteXmlFile=suites/campaign.xml
+                       (see the suites/ folder for per-module files)
+-->
+<suite name="Meera E2E Suite" verbose="1" preserve-order="true">
+
+    <!-- Equivalent of the TS "setup" project -->
+    <test name="setup">
+        <classes>
+            <class name="com.meera.tests.AuthSetupTest"/>
+        </classes>
+    </test>
+
+    <!-- login: no stored auth required -->
+    <test name="login">
+        <classes>
+            <class name="com.meera.tests.LoginTests"/>
+        </classes>
+    </test>
+
+    <!-- everything below depends on the stored auth session -->
+    <test name="campaign">
+        <classes>
+            <class name="com.meera.tests.CreateCampaignTests"/>
+        </classes>
+    </test>
+
+    <test name="editCampaign">
+        <classes>
+            <class name="com.meera.tests.EditCampaignTests"/>
+        </classes>
+    </test>
+
+    <test name="duplicateCampaign">
+        <classes>
+            <class name="com.meera.tests.DuplicateCampaignTests"/>
+        </classes>
+    </test>
+
+    <test name="uploadCampaignLeads">
+        <classes>
+            <class name="com.meera.tests.UploadCampaignLeadsTests"/>
+        </classes>
+    </test>
+
+    <test name="Statecompliance">
+        <classes>
+            <class name="com.meera.tests.StateComplianceTests"/>
+        </classes>
+    </test>
+
+    <test name="addAssistant">
+        <classes>
+            <class name="com.meera.tests.nlp.assistant.AddAssistantTests"/>
+        </classes>
+    </test>
+
+    <test name="editAssistant">
+        <classes>
+            <class name="com.meera.tests.nlp.assistant.EditAssistantTests"/>
+        </classes>
+    </test>
+
+    <test name="deleteAssistant">
+        <classes>
+            <class name="com.meera.tests.nlp.assistant.DeleteAssistantTests"/>
+        </classes>
+    </test>
+
+    <test name="testandtrain">
+        <classes>
+            <class name="com.meera.tests.TestAndTrainTests"/>
+        </classes>
+    </test>
+
+</suite>

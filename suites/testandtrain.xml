@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!-- Runs the auth setup first, then the testandtrain module.
+     Use: mvn test -DsuiteXmlFile=suites/testandtrain.xml -->
+<suite name="testandtrain suite" verbose="1" preserve-order="true">
+    <test name="setup">
+        <classes>
+            <class name="com.meera.tests.AuthSetupTest"/>
+        </classes>
+    </test>
+    <test name="testandtrain">
+        <classes>
+            <class name="com.meera.tests.TestAndTrainTests"/>
+        </classes>
+    </test>
+</suite>
