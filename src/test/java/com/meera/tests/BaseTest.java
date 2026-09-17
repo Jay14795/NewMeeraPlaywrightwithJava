@@ -9,7 +9,9 @@ import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.assertions.PlaywrightAssertions;
 import com.microsoft.playwright.options.LoadState;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,6 +50,10 @@ public abstract class BaseTest {
     protected BrowserContext context;
     protected Page page;
 
+    private static final Object BROWSER_LOCK = new Object();
+    private static Playwright suitePlaywright;
+    private static Browser suiteBrowser;
+
     /** Override to load {@code playwright/.auth/auth.json} into the context. */
     protected boolean useStorageState() {
         return false;
@@ -60,14 +66,27 @@ public abstract class BaseTest {
         return Collections.emptyList();
     }
 
+    @BeforeSuite(alwaysRun = true)
+    public void startBrowser() {
+        synchronized (BROWSER_LOCK) {
+            if (suiteBrowser != null) {
+                return;
+            }
+            suitePlaywright = Playwright.create();
+            BrowserType.LaunchOptions launchOptions = new BrowserType.LaunchOptions()
+                    .setHeadless(Config.HEADLESS)
+                    .setArgs(List.of("--start-maximized"));
+            suiteBrowser = suitePlaywright.chromium().launch(launchOptions);
+        }
+    }
+
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
-        playwright = Playwright.create();
-
-        BrowserType.LaunchOptions launchOptions = new BrowserType.LaunchOptions()
-                .setHeadless(Config.HEADLESS)
-                .setArgs(List.of("--start-maximized"));
-        browser = playwright.chromium().launch(launchOptions);
+        if (suiteBrowser == null) {
+            startBrowser();
+        }
+        playwright = suitePlaywright;
+        browser = suiteBrowser;
 
         Browser.NewContextOptions contextOptions = new Browser.NewContextOptions()
                 // viewport: null — use the real (maximized) window size
@@ -75,13 +94,11 @@ public abstract class BaseTest {
 
         if (useStorageState()) {
             Path authPath = Paths.get(Config.AUTH_STATE_PATH);
-            if (!authPath.toFile().exists()) {
-                throw new IllegalStateException(
-                        "Stored auth session not found at " + authPath.toAbsolutePath()
-                                + ". Run the setup test first (mvn test, or "
-                                + "mvn test -DsuiteXmlFile=suites/<module>.xml which runs setup first).");
+            if (authPath.toFile().exists()) {
+                contextOptions.setStorageStatePath(authPath);
+            } else {
+                System.out.println("Stored auth session not found. Authenticated test will perform login.");
             }
-            contextOptions.setStorageStatePath(authPath);
         }
 
         List<String> perms = permissions();
@@ -98,12 +115,24 @@ public abstract class BaseTest {
         if (context != null) {
             context.close();
         }
-        if (browser != null) {
-            browser.close();
+        context = null;
+        page = null;
+    }
+
+    @AfterSuite(alwaysRun = true)
+    public void stopBrowser() {
+        synchronized (BROWSER_LOCK) {
+            if (suiteBrowser != null) {
+                suiteBrowser.close();
+                suiteBrowser = null;
+            }
+            if (suitePlaywright != null) {
+                suitePlaywright.close();
+                suitePlaywright = null;
+            }
         }
-        if (playwright != null) {
-            playwright.close();
-        }
+        browser = null;
+        playwright = null;
     }
 
     /**

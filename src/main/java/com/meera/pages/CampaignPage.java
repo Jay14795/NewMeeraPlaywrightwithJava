@@ -899,14 +899,8 @@ public class CampaignPage {
             }
         }
 
-        try {
-            page.waitForLoadState(LoadState.NETWORKIDLE,
-                    new Page.WaitForLoadStateOptions().setTimeout(10000));
-        } catch (RuntimeException e) {
-            System.out.println("Network idle timeout - form may still be processing");
-        }
-
-        System.out.println("Form submission processed");
+        waitForCampaignSubmissionResult();
+        System.out.println("Duplicate campaign submission processed");
     }
 
     public void handleValidationPopup() {
@@ -1049,8 +1043,8 @@ public class CampaignPage {
                 new Page.LocatorOptions().setHasText("Campaign Created Successfully."));
         Locator okButton = page.locator(".swal2-actions button.swal2-confirm");
 
-        // Assert the success popup appears (auto-waits up to the timeout; fails the
-        // test if it never shows)
+        // Assert the success popup appears only after the asynchronous submission
+        // completes.
         assertThat(successPopup).isVisible(
                 new com.microsoft.playwright.assertions.LocatorAssertions.IsVisibleOptions()
                         .setTimeout(45000));

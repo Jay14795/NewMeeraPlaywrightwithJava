@@ -48,6 +48,15 @@ mvn test -DsuiteXmlFile=suites/testandtrain.xml
 mvn test -DsuiteXmlFile=suites/login.xml     # no auth needed
 ```
 
+Authenticated test classes also validate `playwright/.auth/auth.json` in their
+shared setup. If the file is missing or the stored session is rejected, the
+test clears the browser session, logs in again, and saves a fresh state. This
+means an individual authenticated class can also be run directly:
+
+```bash
+mvn test -Dtest=CreateCampaignTests
+```
+
 ## Project layout
 
 ```
