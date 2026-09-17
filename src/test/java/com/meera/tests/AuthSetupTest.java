@@ -4,6 +4,7 @@ import com.meera.config.Config;
 import com.meera.pages.LoginPage;
 import com.meera.utils.ExcelDataReader;
 import com.microsoft.playwright.BrowserContext;
+import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.LoadState;
 
 import org.testng.annotations.Test;
@@ -58,6 +59,7 @@ public class AuthSetupTest extends BaseTest {
         // ----- Fresh login ---------------------------------------------
         System.out.println("Logging in as: " + authUser.get("email"));
         LoginPage loginPage = new LoginPage(page);
+        clearStoredSession();
         loginPage.goTo(Config.BASE_URL);
         loginPage.verifyTitle("Sign In");
         loginPage.login(authUser.get("email"), authUser.get("password"));
@@ -79,6 +81,16 @@ public class AuthSetupTest extends BaseTest {
         // Always save the current state
         context.storageState(new BrowserContext.StorageStateOptions().setPath(authPath));
         System.out.println("Auth state saved to: " + authPath);
+    }
+
+    private void clearStoredSession() {
+        System.out.println("Clearing expired browser session before login.");
+        context.clearCookies();
+        page.navigate(Config.BASE_URL,
+                new Page.NavigateOptions()
+                        .setWaitUntil(com.microsoft.playwright.options.WaitUntilState.DOMCONTENTLOADED)
+                        .setTimeout(30_000));
+        page.evaluate("() => { localStorage.clear(); sessionStorage.clear(); }");
     }
 
     private static boolean isTruthy(String s) {

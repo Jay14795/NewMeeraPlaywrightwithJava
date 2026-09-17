@@ -96,7 +96,7 @@ public class CreateCampaignTests extends AuthenticatedTest {
         Path authPath = Paths.get(Config.AUTH_STATE_PATH);
         if (!authPath.toFile().exists()) {
             System.out.println("No auth state found. Logging in...");
-            performLogin();
+            performLogin(false);
             return;
         }
 
@@ -107,10 +107,10 @@ public class CreateCampaignTests extends AuthenticatedTest {
         }
         System.out.println("Stored token is expired or rejected. Re-logging in...");
 
-        performLogin();
+        performLogin(true);
     }
 
-    private void performLogin() {
+    private void performLogin(boolean forceLogin) {
         List<Map<String, String>> loginData = ExcelDataReader.getTestData(Config.LOGIN_DATA, "LoginData");
         Map<String, String> authUser = loginData.stream()
                 .filter(d -> isTruthy(d.get("expectedURL")) && !isTruthy(d.get("expectedError")))
@@ -122,6 +122,9 @@ public class CreateCampaignTests extends AuthenticatedTest {
 
         System.out.println("Logging in as: " + authUser.get("email"));
         LoginPage loginPage = new LoginPage(page);
+        if (forceLogin) {
+            clearStoredSession();
+        }
         loginPage.goTo(Config.BASE_URL);
 
         if (page.url().contains("/login") || page.url().contains("/signin")) {
@@ -134,12 +137,24 @@ public class CreateCampaignTests extends AuthenticatedTest {
                 System.out.println("Network did not reach idle after login; continuing anyway.");
             }
         } else {
-            System.out.println("Already logged in (redirected to dashboard). Skipping login.");
+            throw new IllegalStateException(
+                    "Fresh login was required, but the application did not show the login page. "
+                            + "Current URL: " + page.url());
         }
         page.waitForTimeout(2000);
 
         context.storageState(new BrowserContext.StorageStateOptions().setPath(Paths.get(Config.AUTH_STATE_PATH)));
         System.out.println("Auth state saved to: " + Config.AUTH_STATE_PATH);
+    }
+
+    private void clearStoredSession() {
+        System.out.println("Clearing expired browser session before login.");
+        context.clearCookies();
+        page.navigate(Config.BASE_URL,
+                new Page.NavigateOptions()
+                        .setWaitUntil(com.microsoft.playwright.options.WaitUntilState.DOMCONTENTLOADED)
+                        .setTimeout(30_000));
+        page.evaluate("() => { localStorage.clear(); sessionStorage.clear(); }");
     }
 
     private static boolean isTruthy(String s) {
