@@ -34,6 +34,15 @@ public class LoginPage {
         assertThat(page).hasTitle(title);
     }
 
+    public boolean isLoginFormVisible() {
+        try {
+            return emailInput.isVisible(new Locator.IsVisibleOptions().setTimeout(5000))
+                    && passwordInput.isVisible(new Locator.IsVisibleOptions().setTimeout(5000));
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
     public void enterEmail(String email) {
         emailInput.fill(email);
     }

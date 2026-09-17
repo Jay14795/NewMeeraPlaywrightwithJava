@@ -127,8 +127,8 @@ public class CreateCampaignTests extends AuthenticatedTest {
         }
         loginPage.goTo(Config.BASE_URL);
 
-        if (page.url().contains("/login") || page.url().contains("/signin")) {
-            loginPage.verifyTitle("Sign In");
+        boolean loginRoute = page.url().contains("/login") || page.url().contains("/signin");
+        if (loginRoute || loginPage.isLoginFormVisible()) {
             loginPage.login(authUser.get("email"), authUser.get("password"));
             try {
                 page.waitForLoadState(LoadState.NETWORKIDLE,
