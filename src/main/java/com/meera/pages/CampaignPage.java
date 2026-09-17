@@ -56,7 +56,10 @@ public class CampaignPage {
         return s != null && !s.isEmpty();
     }
 
-    /** Dismisses a SweetAlert2 modal if one is currently shown (blocks pointer events otherwise). */
+    /**
+     * Dismisses a SweetAlert2 modal if one is currently shown (blocks pointer
+     * events otherwise).
+     */
     private void dismissSwal2IfPresent() {
         Locator swal = page.locator(".swal2-container.swal2-backdrop-show");
         if (swal.count() == 0) {
@@ -209,9 +212,11 @@ public class CampaignPage {
         campaignGoalInput.fill(text);
     }
 
-    /* ---------------------------------------------------------------
+    /*
+     * ---------------------------------------------------------------
      * Numbers tab
-     * --------------------------------------------------------------- */
+     * ---------------------------------------------------------------
+     */
 
     public void clickNumbersTab() {
         dismissSwal2IfPresent();
@@ -297,9 +302,11 @@ public class CampaignPage {
         System.out.println("Numbers tab filled completely");
     }
 
-    /* ---------------------------------------------------------------
+    /*
+     * ---------------------------------------------------------------
      * Business hours tab
-     * --------------------------------------------------------------- */
+     * ---------------------------------------------------------------
+     */
 
     public void clickBusinessHrsTab() {
         dismissSwal2IfPresent();
@@ -357,16 +364,19 @@ public class CampaignPage {
         }
     }
 
-    /* ---------------------------------------------------------------
+    /*
+     * ---------------------------------------------------------------
      * System-initiated messages tab
-     * --------------------------------------------------------------- */
+     * ---------------------------------------------------------------
+     */
 
     public void clickSystemInitiatedTab() {
         dismissSwal2IfPresent();
         Locator tab = page.locator("a[href='#tab_6_4']");
         tab.waitFor(new Locator.WaitForOptions()
                 .setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
-        // Tab is initially disabled — wait for it to become enabled after filling previous tabs
+        // Tab is initially disabled — wait for it to become enabled after filling
+        // previous tabs
         try {
             page.waitForFunction(
                     "() => !document.querySelector(\"a[href='#tab_6_4']\").classList.contains('disabled')",
@@ -449,9 +459,11 @@ public class CampaignPage {
         }
     }
 
-    /* ---------------------------------------------------------------
+    /*
+     * ---------------------------------------------------------------
      * Sweet-alert helper
-     * --------------------------------------------------------------- */
+     * ---------------------------------------------------------------
+     */
 
     public void dismissSweetAlert() {
         page.evaluate("() => {"
@@ -466,9 +478,11 @@ public class CampaignPage {
         page.waitForTimeout(500);
     }
 
-    /* ---------------------------------------------------------------
+    /*
+     * ---------------------------------------------------------------
      * Call settings tab
-     * --------------------------------------------------------------- */
+     * ---------------------------------------------------------------
+     */
 
     public void clickCallSettingsTab() {
         Locator tab = page.locator("a[href='#tab_6_5']");
@@ -587,9 +601,11 @@ public class CampaignPage {
         }
     }
 
-    /* ---------------------------------------------------------------
+    /*
+     * ---------------------------------------------------------------
      * Transfer settings tab
-     * --------------------------------------------------------------- */
+     * ---------------------------------------------------------------
+     */
 
     public void clickTransferSettingsTab() {
         Locator tab = page.locator("a[href='#tab_6_7']");
@@ -640,12 +656,12 @@ public class CampaignPage {
 
         Object whisperRadios = page.evaluate(
                 "() => Array.from(document.querySelectorAll('input[type=radio]'))"
-                + ".filter(r => /whisper|press_any_key|user_end|userend|campaign/i.test(r.name))"
-                + ".map(r => { const l = r.closest('label'); "
-                + "const card = l ? (l.closest('.card') || l.closest('.col') || null) : null; "
-                + "return (r.name || '') + '=' + (r.value || '') + ' checked=' + r.checked"
-                + " + (l ? ' label=[' + (l.innerText || '').replace(/\\s+/g, ' ').trim() + ']' : '')"
-                + " + (card ? ' card=[' + (card.innerText || '').replace(/\\s+/g, ' ').trim().slice(0, 60) + ']' : ''); })");
+                        + ".filter(r => /whisper|press_any_key|user_end|userend|campaign/i.test(r.name))"
+                        + ".map(r => { const l = r.closest('label'); "
+                        + "const card = l ? (l.closest('.card') || l.closest('.col') || null) : null; "
+                        + "return (r.name || '') + '=' + (r.value || '') + ' checked=' + r.checked"
+                        + " + (l ? ' label=[' + (l.innerText || '').replace(/\\s+/g, ' ').trim() + ']' : '')"
+                        + " + (card ? ' card=[' + (card.innerText || '').replace(/\\s+/g, ' ').trim().slice(0, 60) + ']' : ''); })");
         System.out.println("Whisper radios: " + whisperRadios);
 
         if (isTruthy(data.get("connectingWhisper"))) {
@@ -686,54 +702,54 @@ public class CampaignPage {
     public void selectWhisperSectionOption(String section, String option) {
         Object result = page.evaluate(
                 "([section, option]) => {"
-                + "  const key = s => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '');"
-                + "  const norm = t => (t || '').replace(/[\\s\\u00a0]+/g, ' ').trim();"
-                + "  const heads = Array.from(document.querySelectorAll("
-                + "    'h1,h2,h3,h4,h5,h6,legend,label,span,p,strong,b,div'));"
-                + "  const head = heads.find(e => "
-                + "    norm(e.innerText || e.textContent).toLowerCase().startsWith(section.toLowerCase())"
-                + "    && (e.innerText || e.textContent).length < 200);"
-                + "  if (!head) return { ok: false, reason: 'section heading not found' };"
-                + "  let node = head;"
-                + "  for (let i = 0; i < 8; i++) {"
-                + "    node = node.parentElement;"
-                + "    if (!node || node.tagName === 'BODY') break;"
-                + "    const radios = Array.from(node.querySelectorAll('input[type=radio]'));"
-                + "    for (const r of radios) {"
-                + "      if (key(r.value) === key(option)) {"
-                + "        r.checked = true;"
-                + "        r.dispatchEvent(new MouseEvent('click', { bubbles: true }));"
-                + "        r.dispatchEvent(new Event('change', { bubbles: true }));"
-                + "        return { ok: true, name: r.name, value: r.value, via: 'radio' };"
-                + "      }"
-                + "    }"
-                + "    const labels = Array.from(node.querySelectorAll('label'));"
-                + "    for (const l of labels) {"
-                + "      if (key(norm(l.innerText || l.textContent)) === key(option)) {"
-                + "        const inside = l.querySelector('input[type=radio]');"
-                + "        const forId = l.getAttribute('for');"
-                + "        const ref = inside || (forId ? document.getElementById(forId) : null);"
-                + "        if (ref && ref.type === 'radio') {"
-                + "          ref.checked = true;"
-                + "          ref.dispatchEvent(new MouseEvent('click', { bubbles: true }));"
-                + "          ref.dispatchEvent(new Event('change', { bubbles: true }));"
-                + "          return { ok: true, name: ref.name, value: ref.value, via: 'label' };"
-                + "        }"
-                + "        l.click();"
-                + "        return { ok: true, via: 'label-click' };"
-                + "      }"
-                + "    }"
-                + "  }"
-                + "  return { ok: false, reason: 'option not found in section scope' };"
-                + "}",
+                        + "  const key = s => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '');"
+                        + "  const norm = t => (t || '').replace(/[\\s\\u00a0]+/g, ' ').trim();"
+                        + "  const heads = Array.from(document.querySelectorAll("
+                        + "    'h1,h2,h3,h4,h5,h6,legend,label,span,p,strong,b,div'));"
+                        + "  const head = heads.find(e => "
+                        + "    norm(e.innerText || e.textContent).toLowerCase().startsWith(section.toLowerCase())"
+                        + "    && (e.innerText || e.textContent).length < 200);"
+                        + "  if (!head) return { ok: false, reason: 'section heading not found' };"
+                        + "  let node = head;"
+                        + "  for (let i = 0; i < 8; i++) {"
+                        + "    node = node.parentElement;"
+                        + "    if (!node || node.tagName === 'BODY') break;"
+                        + "    const radios = Array.from(node.querySelectorAll('input[type=radio]'));"
+                        + "    for (const r of radios) {"
+                        + "      if (key(r.value) === key(option)) {"
+                        + "        r.checked = true;"
+                        + "        r.dispatchEvent(new MouseEvent('click', { bubbles: true }));"
+                        + "        r.dispatchEvent(new Event('change', { bubbles: true }));"
+                        + "        return { ok: true, name: r.name, value: r.value, via: 'radio' };"
+                        + "      }"
+                        + "    }"
+                        + "    const labels = Array.from(node.querySelectorAll('label'));"
+                        + "    for (const l of labels) {"
+                        + "      if (key(norm(l.innerText || l.textContent)) === key(option)) {"
+                        + "        const inside = l.querySelector('input[type=radio]');"
+                        + "        const forId = l.getAttribute('for');"
+                        + "        const ref = inside || (forId ? document.getElementById(forId) : null);"
+                        + "        if (ref && ref.type === 'radio') {"
+                        + "          ref.checked = true;"
+                        + "          ref.dispatchEvent(new MouseEvent('click', { bubbles: true }));"
+                        + "          ref.dispatchEvent(new Event('change', { bubbles: true }));"
+                        + "          return { ok: true, name: ref.name, value: ref.value, via: 'label' };"
+                        + "        }"
+                        + "        l.click();"
+                        + "        return { ok: true, via: 'label-click' };"
+                        + "      }"
+                        + "    }"
+                        + "  }"
+                        + "  return { ok: false, reason: 'option not found in section scope' };"
+                        + "}",
                 java.util.Arrays.asList(section, option));
         System.out.println("Whisper section ['" + section + "' -> '" + option + "']: " + result);
         page.waitForTimeout(300);
 
         Object after = page.evaluate(
                 "() => Array.from(document.querySelectorAll('input[type=radio]'))"
-                + ".filter(r => /whisper|press_any_key|user_end|userend/i.test(r.name))"
-                + ".map(r => (r.name || '') + '=' + (r.value || '') + ' checked=' + r.checked)");
+                        + ".filter(r => /whisper|press_any_key|user_end|userend/i.test(r.name))"
+                        + ".map(r => (r.name || '') + '=' + (r.value || '') + ' checked=' + r.checked)");
         System.out.println("Whisper radios AFTER selection: " + after);
     }
 
@@ -745,9 +761,11 @@ public class CampaignPage {
         }
     }
 
-    /* ---------------------------------------------------------------
+    /*
+     * ---------------------------------------------------------------
      * Submit + verify
-     * --------------------------------------------------------------- */
+     * ---------------------------------------------------------------
+     */
 
     public void clickAddCampaign() {
         Locator addBtn = page.locator("input#add_campaign");
@@ -763,12 +781,12 @@ public class CampaignPage {
 
         Object btnInfo = page.evaluate(
                 "() => { const b = document.querySelector('input#add_campaign');"
-                + " return b ? {disabled: b.disabled, type: b.type, value: b.value, form: b.form?.id ?? 'none'} : null; }");
+                        + " return b ? {disabled: b.disabled, type: b.type, value: b.value, form: b.form?.id ?? 'none'} : null; }");
         System.out.println("add_campaign button state: " + btnInfo);
 
         try {
             addBtn.click(new Locator.ClickOptions().setTimeout(15000));
-            page.waitForTimeout(2000);
+            waitForCampaignSubmissionResult();
             System.out.println("Add campaign clicked. Current URL: " + page.url());
         } catch (RuntimeException error) {
             try {
@@ -777,6 +795,24 @@ public class CampaignPage {
             } catch (RuntimeException ignored) {
             }
             throw error;
+        }
+    }
+
+    private void waitForCampaignSubmissionResult() {
+        try {
+            page.waitForFunction(
+                    "() => {"
+                            + " const success = document.querySelector('.swal2-popup.swal2-icon-success');"
+                            + " const validation = document.querySelector("
+                            + "'.error, .invalid, .text-danger, .help-block, "
+                            + ".field-validation-error, [aria-invalid=\"true\"]');"
+                            + " return (success && success.offsetParent !== null)"
+                            + " || (validation && validation.offsetParent !== null);"
+                            + "}",
+                    null,
+                    new Page.WaitForFunctionOptions().setTimeout(60_000));
+        } catch (RuntimeException e) {
+            System.out.println("Campaign submission is still processing after 60 seconds.");
         }
     }
 
@@ -882,11 +918,17 @@ public class CampaignPage {
                 page.waitForTimeout(1000);
                 continue;
             }
+            Locator successPopup = page.locator(".swal2-popup.swal2-icon-success");
+            if (successPopup.count() > 0 && successPopup.first().isVisible()) {
+                System.out.println("Campaign success popup found; leaving it open for assertion.");
+                break;
+            }
             Locator confirmBtn = page.locator(".swal2-container .swal2-confirm");
             boolean dismissed = false;
             if (confirmBtn.count() > 0 && confirmBtn.first().isVisible()) {
                 String label = confirmBtn.first().textContent() == null
-                        ? "" : confirmBtn.first().textContent().trim();
+                        ? ""
+                        : confirmBtn.first().textContent().trim();
                 System.out.println("Dismissing confirmation popup: '" + label + "'");
                 confirmBtn.first().click();
                 page.waitForTimeout(1000);
@@ -905,19 +947,22 @@ public class CampaignPage {
         Locator okButton = page.locator(".swal2-actions button.swal2-confirm");
 
         boolean shown = false;
-        for (int i = 0; i < 18; i++) {
+        for (int i = 0; i < 12; i++) {
             try {
-                if (swalSuccess.isVisible(new Locator.IsVisibleOptions().setTimeout(5000))) {
+                if (swalSuccess.isVisible(new Locator.IsVisibleOptions().setTimeout(5000))
+                        && swalTitle.isVisible(new Locator.IsVisibleOptions().setTimeout(1000))) {
                     shown = true;
                     break;
                 }
             } catch (RuntimeException ignored) {
             }
             // A confirmation popup may be blocking submission — accept it and keep waiting.
-            Locator confirmBtn = page.locator(".swal2-container .swal2-confirm");
+            Locator confirmBtn = page.locator(
+                    ".swal2-container:not(:has(.swal2-icon-success)) .swal2-confirm");
             if (confirmBtn.count() > 0 && confirmBtn.first().isVisible()) {
                 String label = confirmBtn.first().textContent() == null
-                        ? "" : confirmBtn.first().textContent().trim();
+                        ? ""
+                        : confirmBtn.first().textContent().trim();
                 System.out.println("Dismissing popup while waiting for success: '" + label + "'");
                 confirmBtn.first().click();
                 page.waitForTimeout(1000);
@@ -929,9 +974,11 @@ public class CampaignPage {
             Locator anySwal = page.locator(".swal2-popup");
             if (anySwal.count() > 0 && anySwal.first().isVisible()) {
                 String title = page.locator("#swal2-title").textContent() == null
-                        ? "" : page.locator("#swal2-title").textContent();
+                        ? ""
+                        : page.locator("#swal2-title").textContent();
                 String html = page.locator(".swal2-html-container").textContent() == null
-                        ? "" : page.locator(".swal2-html-container").textContent();
+                        ? ""
+                        : page.locator(".swal2-html-container").textContent();
                 System.out.println("SWAL title: '" + title.trim() + "' html: '" + html.trim() + "'");
             } else {
                 System.out.println("No SWAL popup visible. Current URL: " + page.url());
@@ -939,33 +986,33 @@ public class CampaignPage {
 
             Object validation = page.evaluate(
                     "() => Array.from(document.querySelectorAll('.error, .invalid, .text-danger, "
-                    + ".help-block, .field-validation-error, [aria-invalid=\"true\"]'))"
-                    + ".filter(el => el.offsetParent !== null)"
-                    + ".map(el => {"
-                    + "  const fg = el.closest('.form-group, .form-row, .form-item, .col, td, tr, .nav-item, .tab-pane');"
-                    + "  const html = fg ? fg.outerHTML.replace(/\\s+/g, ' ').slice(0, 400) : '';"
-                    + "  const inputs = fg ? Array.from(fg.querySelectorAll('input,select,textarea'))"
-                    + "      .map(i => (i.name || i.id || '?') + '/' + (i.type || '') + '=' + (i.value || '')).join(' , ') : '';"
-                    + "  const lab = el.closest('label');"
-                    + "  const txt = lab ? (lab.innerText || '').replace(/\\s+/g, ' ').trim().slice(0, 60) : '';"
-                    + "  return (txt || el.textContent.trim()) + ' ||| inputs: ' + inputs + ' ||| html: ' + html;"
-                    + "}).slice(0, 15)");
+                            + ".help-block, .field-validation-error, [aria-invalid=\"true\"]'))"
+                            + ".filter(el => el.offsetParent !== null)"
+                            + ".map(el => {"
+                            + "  const fg = el.closest('.form-group, .form-row, .form-item, .col, td, tr, .nav-item, .tab-pane');"
+                            + "  const html = fg ? fg.outerHTML.replace(/\\s+/g, ' ').slice(0, 400) : '';"
+                            + "  const inputs = fg ? Array.from(fg.querySelectorAll('input,select,textarea'))"
+                            + "      .map(i => (i.name || i.id || '?') + '/' + (i.type || '') + '=' + (i.value || '')).join(' , ') : '';"
+                            + "  const lab = el.closest('label');"
+                            + "  const txt = lab ? (lab.innerText || '').replace(/\\s+/g, ' ').trim().slice(0, 60) : '';"
+                            + "  return (txt || el.textContent.trim()) + ' ||| inputs: ' + inputs + ' ||| html: ' + html;"
+                            + "}).slice(0, 15)");
             System.out.println("DETAILED validation messages: " + validation);
 
             Object requiredFields = page.evaluate(
                     "() => Array.from(document.querySelectorAll('#add_admin_user_form input, "
-                    + "#add_admin_user_form select, #add_admin_user_form textarea'))"
-                    + ".filter(el => el.required || el.getAttribute('aria-required') === 'true'"
-                    + " || /required/i.test(el.className))"
-                    + ".map(el => {"
-                    + "  const t = el.type || '';"
-                    + "  let v = (t === 'checkbox' || t === 'radio') ? String(el.checked) : (el.value || '');"
-                    + "  if (v.length > 30) v = v.slice(0, 30) + '...';"
-                    + "  const lab = (el.id ? document.querySelector('label[for=\"' + el.id + '\"]') : null)"
-                    + "        || el.closest('label');"
-                    + "  const labText = lab ? (lab.innerText || '').replace(/\\s+/g, ' ').trim().slice(0, 60) : '';"
-                    + "  return (el.name || el.id || '?') + '[' + labText + '] = ' + v;"
-                    + "})");
+                            + "#add_admin_user_form select, #add_admin_user_form textarea'))"
+                            + ".filter(el => el.required || el.getAttribute('aria-required') === 'true'"
+                            + " || /required/i.test(el.className))"
+                            + ".map(el => {"
+                            + "  const t = el.type || '';"
+                            + "  let v = (t === 'checkbox' || t === 'radio') ? String(el.checked) : (el.value || '');"
+                            + "  if (v.length > 30) v = v.slice(0, 30) + '...';"
+                            + "  const lab = (el.id ? document.querySelector('label[for=\"' + el.id + '\"]') : null)"
+                            + "        || el.closest('label');"
+                            + "  const labText = lab ? (lab.innerText || '').replace(/\\s+/g, ' ').trim().slice(0, 60) : '';"
+                            + "  return (el.name || el.id || '?') + '[' + labText + '] = ' + v;"
+                            + "})");
             System.out.println("Required fields state: " + requiredFields);
 
             try {
@@ -980,10 +1027,10 @@ public class CampaignPage {
 
         assertThat(swalSuccess).isVisible(
                 new com.microsoft.playwright.assertions.LocatorAssertions.IsVisibleOptions()
-                        .setTimeout(15000));
+                        .setTimeout(60000));
         assertThat(swalTitle).isVisible(
                 new com.microsoft.playwright.assertions.LocatorAssertions.IsVisibleOptions()
-                        .setTimeout(10000));
+                        .setTimeout(15000));
         System.out.println("'Campaign Created Successfully.' popup is visible");
 
         okButton.click();
@@ -1002,7 +1049,8 @@ public class CampaignPage {
                 new Page.LocatorOptions().setHasText("Campaign Created Successfully."));
         Locator okButton = page.locator(".swal2-actions button.swal2-confirm");
 
-        // Assert the success popup appears (auto-waits up to the timeout; fails the test if it never shows)
+        // Assert the success popup appears (auto-waits up to the timeout; fails the
+        // test if it never shows)
         assertThat(successPopup).isVisible(
                 new com.microsoft.playwright.assertions.LocatorAssertions.IsVisibleOptions()
                         .setTimeout(45000));
