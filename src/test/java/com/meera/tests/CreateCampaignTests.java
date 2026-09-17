@@ -4,11 +4,9 @@ import com.meera.config.Config;
 import com.meera.pages.CampaignPage;
 import com.meera.pages.LoginPage;
 import com.meera.utils.ExcelDataReader;
-import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.LoadState;
-import com.microsoft.playwright.options.WaitUntilState;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -103,33 +101,11 @@ public class CreateCampaignTests extends AuthenticatedTest {
         }
 
         System.out.println("Auth state found. Checking if token is still valid...");
-        BrowserContext probeContext = null;
-        try {
-            probeContext = browser.newContext(
-                    new Browser.NewContextOptions()
-                            .setViewportSize(null)
-                            .setStorageStatePath(authPath));
-            Page probe = probeContext.newPage();
-            probe.navigate(Config.BASE_URL,
-                    new Page.NavigateOptions()
-                            .setWaitUntil(WaitUntilState.LOAD)
-                            .setTimeout(30_000));
-
-            if (!probe.url().contains("/login") && !probe.url().contains("/signin")) {
-                System.out.println("Token is still valid! Skipping login.");
-                probeContext.storageState(new BrowserContext.StorageStateOptions().setPath(authPath));
-                return;
-            } else {
-                System.out.println("Token expired (redirected to login). Re-logging in...");
-            }
-        } catch (RuntimeException e) {
-            System.out.println("Could not validate token: " + e.getMessage());
-            System.out.println("Will perform fresh login.");
-        } finally {
-            if (probeContext != null) {
-                probeContext.close();
-            }
+        if (hasValidStoredSession(authPath, Config.CAMPAIGN_CREATE_URL)) {
+            System.out.println("Token is still valid! Skipping login.");
+            return;
         }
+        System.out.println("Stored token is expired or rejected. Re-logging in...");
 
         performLogin();
     }

@@ -4,7 +4,6 @@ import com.meera.config.Config;
 import com.meera.pages.LoginPage;
 import com.meera.utils.ExcelDataReader;
 import com.microsoft.playwright.BrowserContext;
-import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.LoadState;
 
 import org.testng.annotations.Test;
@@ -20,15 +19,16 @@ import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertTha
  * Produces the stored login session at {@code playwright/.auth/auth.json}.
  * Port of {@code tests/auth.setup.js}, the TS "setup" project.
  *
- * <p>Reuses an existing session if it is still valid; otherwise performs a
- * fresh login and saves the storage state.</p>
+ * <p>
+ * Reuses an existing session if it is still valid; otherwise performs a
+ * fresh login and saves the storage state.
+ * </p>
  */
 public class AuthSetupTest extends BaseTest {
 
-    @Test(groups = {"setup"})
+    @Test(groups = { "setup" })
     public void authenticate() {
-        List<Map<String, String>> loginData =
-                ExcelDataReader.getTestData(Config.LOGIN_DATA, "LoginData");
+        List<Map<String, String>> loginData = ExcelDataReader.getTestData(Config.LOGIN_DATA, "LoginData");
 
         // Select a valid login (one without expectedError) and with expectedURL
         Map<String, String> authUser = loginData.stream()
@@ -45,34 +45,12 @@ public class AuthSetupTest extends BaseTest {
         // ----- Try to reuse an existing, still-valid session ------------
         if (authExists) {
             System.out.println("Auth state found. Checking if token is still valid...");
-            BrowserContext probeContext = null;
-            try {
-                probeContext = browser.newContext(
-                        new com.microsoft.playwright.Browser.NewContextOptions()
-                                .setViewportSize(null)
-                                .setStorageStatePath(authPath));
-                Page probe = probeContext.newPage();
-                probe.navigate(Config.CAMPAIGN_CREATE_URL,
-                        new Page.NavigateOptions().setWaitUntil(
-                                com.microsoft.playwright.options.WaitUntilState.NETWORKIDLE));
-
-                if (!probe.url().contains("/login") && !probe.url().contains("/signin")) {
-                    System.out.println("Token is still valid! Skipping login.");
-                    // Re-save to refresh the stored state.
-                    probeContext.storageState(new BrowserContext.StorageStateOptions().setPath(authPath));
-                    System.out.println("Auth state already saved. Continuing with tests...");
-                    return;
-                } else {
-                    System.out.println("Token expired (redirected to login). Need to login again.");
-                }
-            } catch (RuntimeException e) {
-                System.out.println("Could not validate token: " + e.getMessage());
-                System.out.println("Will perform fresh login.");
-            } finally {
-                if (probeContext != null) {
-                    probeContext.close();
-                }
+            if (hasValidStoredSession(authPath, Config.CAMPAIGN_CREATE_URL)) {
+                System.out.println("Token is still valid! Skipping login.");
+                System.out.println("Auth state already saved. Continuing with tests...");
+                return;
             }
+            System.out.println("Stored token is expired or rejected. Need to login again.");
         } else {
             System.out.println("No auth state found. Performing fresh login.");
         }
